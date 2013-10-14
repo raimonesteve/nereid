@@ -240,13 +240,13 @@ class Nereid(Flask):
         """
         return self._database
 
-    def transaction(self, http_host):
+    def transaction(self, environ):
         """
         Allows the use of the transaction as a context manager.
         The transaction created loads the user from the known websites
         which is identified through the http_host
         """
-        website_name = get_website_from_host(http_host)
+        website_name = get_website_from_host(environ.get('HTTP_HOST'))
         try:
             website = self.websites[website_name]
         except KeyError:
@@ -259,6 +259,9 @@ class Nereid(Flask):
             context = {
                 'company': website['company'],
             }
+            path = environ.get('PATH_INFO').split('/')
+            if len(path) > 2:
+                context['language'] = path[1]
             return TransactionManager(
                 self.database_name, website['application_user'], context
             )
@@ -406,7 +409,7 @@ class Nereid(Flask):
         if not self.initialised:
             self.initialise()
 
-        with self.transaction(environ['HTTP_HOST']) as txn:
+        with self.transaction(environ) as txn:
             with self.request_context(environ):
                 try:
                     response = self.full_dispatch_request()
