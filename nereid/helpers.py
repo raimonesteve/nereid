@@ -312,6 +312,7 @@ def _rst_to_html_filter(value):
     except Exception:
         return value
 
+
 def _translation_filter(value, name):
     """
     Return a translation from ir.translation
@@ -325,15 +326,16 @@ def _translation_filter(value, name):
     locale = Transaction().language
     Translation = Pool().get('ir.translation')
     translations = Translation.search([
-        ('lang', '=', locale),
-        ('name', '=', name),
-        ('src', 'ilike', value),
-        ], limit=1)
+            ('lang', '=', locale),
+            ('name', '=', name),
+            ('src', 'ilike', value),
+            ], limit=1)
     if translations:
         translation, = translations
         if translation.value:
             return translation.value
     return value
+
 
 def key_from_list(list_of_args):
     """
