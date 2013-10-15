@@ -16,6 +16,8 @@ from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
         get_flashed_messages, flash, url_for as flask_url_for)
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
+from trytond.pool import Pool
+from trytond.transaction import Transaction
 
 from .globals import session, current_app, request
 
@@ -310,6 +312,28 @@ def _rst_to_html_filter(value):
     except Exception:
         return value
 
+def _translation_filter(value, name):
+    """
+    Return a translation from ir.translation
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    :param value: str to translate
+    :param name: field name
+
+    Example::
+         {{ sale.state|translation('sale.sale,state') }
+    """
+    locale = Transaction().language
+    Translation = Pool().get('ir.translation')
+    translations = Translation.search([
+        ('lang', '=', locale),
+        ('name', '=', name),
+        ('src', 'ilike', value),
+        ], limit=1)
+    if translations:
+        translation, = translations
+        if translation.value:
+            return translation.value
+    return value
 
 def key_from_list(list_of_args):
     """

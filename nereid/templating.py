@@ -18,7 +18,7 @@ import trytond.tools as tools
 from trytond.transaction import Transaction
 
 from .globals import request, current_app  # noqa
-from .helpers import _rst_to_html_filter, make_crumbs
+from .helpers import _rst_to_html_filter, _translation_filter, make_crumbs
 
 
 class LazyRenderer(_LazyString):
@@ -116,6 +116,7 @@ def nereid_default_template_ctx_processor():
 
 NEREID_TEMPLATE_FILTERS = dict(
     rst=_rst_to_html_filter,
+    translation=_translation_filter,
 )
 
 
