@@ -246,7 +246,8 @@ class Nereid(Flask):
         The transaction created loads the user from the known websites
         which is identified through the http_host
         """
-        website_name = get_website_from_host(environ.get('HTTP_HOST'))
+        http_host = environ.get('HTTP_HOST')
+        website_name = get_website_from_host(http_host)
         try:
             website = self.websites[website_name]
         except KeyError:
