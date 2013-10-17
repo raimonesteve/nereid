@@ -17,7 +17,6 @@ from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 from trytond.pool import Pool
-from trytond.transaction import Transaction
 
 from .globals import session, current_app, request
 
@@ -315,25 +314,20 @@ def _rst_to_html_filter(value):
 
 def _translation_filter(value, name):
     """
-    Return a translation from ir.translation
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    :param value: str to translate
-    :param name: field name
+    Return a value from selection field
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    :param value: str key 
+    :param name: str object,field
 
     Example::
-         {{ sale.state|translation('sale.sale,state') }
+        {{ sale.state|translation('sale.sale,state') }}
+        {{ invoice.type|translation('account.invoice,type') }}
     """
-    locale = Transaction().language
-    Translation = Pool().get('ir.translation')
-    translations = Translation.search([
-            ('lang', '=', locale),
-            ('name', '=', name),
-            ('src', 'ilike', value),
-            ], limit=1)
-    if translations:
-        translation, = translations
-        if translation.value:
-            return translation.value
+    model, field = name.split(',')
+    Model = Pool().get(model)
+    fields = Model.fields_get(fields_names=[field])
+    if fields.get('type').get('selection'):
+        return dict(fields.get('type').get('selection'))[value]
     return value
 
 
