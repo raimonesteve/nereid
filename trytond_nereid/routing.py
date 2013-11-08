@@ -15,8 +15,8 @@ from trytond.pool import Pool
 
 from .i18n import _
 
-__all__ = ['URLMap', 'WebSite', 'URLRule', 'URLRuleDefaults',
-           'WebsiteCountry', 'WebsiteCurrency']
+__all__ = ['URLMap', 'WebSite', 'WebSiteLocale', 'URLRule', 'URLRuleDefaults',
+           'WebsiteCountry', 'WebsiteCurrency', 'WebsiteWebsiteLocale']
 
 
 class URLMap(ModelSQL, ModelView):
@@ -137,6 +137,11 @@ class WebSite(ModelSQL, ModelView):
         'ir.lang', 'Default Language',
         required=True
     )
+
+    #: Allowed currencies in the website
+    languages = fields.Many2Many(
+        'nereid.website-nereid.webiste.locale',
+        'website', 'locale', 'Languages Available')
 
     #: The res.user with which the nereid application will be loaded
     #:  .. versionadded: 0.3
@@ -347,6 +352,17 @@ class WebSite(ModelSQL, ModelView):
         return jsonify(status=cls._user_status())
 
 
+class WebSiteLocale(ModelSQL, ModelView):
+    'Web Site Locale'
+    __name__ = "nereid.website.locale"
+    _rec_name = 'code'
+    code = fields.Char('Code', required=True)
+    language = fields.Many2One('ir.lang', 'Default Language',
+        required=True)
+    currency = fields.Many2One('currency.currency', 'Currency',
+        ondelete='CASCADE', required=True)
+
+
 class URLRule(ModelSQL, ModelView):
     """
     URL Rule
@@ -496,4 +512,17 @@ class WebsiteCurrency(ModelSQL):
         ondelete='CASCADE', select=1, required=True)
     currency = fields.Many2One(
         'currency.currency', 'Currency',
+        ondelete='CASCADE', select=1, required=True)
+
+
+class WebsiteWebsiteLocale(ModelSQL):
+    "Languages to be made available on website"
+    __name__ = 'nereid.website-nereid.webiste.locale'
+    _table = 'website_locale_rel'
+
+    website = fields.Many2One(
+        'nereid.website', 'Website',
+        ondelete='CASCADE', select=1, required=True)
+    locale = fields.Many2One(
+        'nereid.website.locale', 'Locale',
         ondelete='CASCADE', select=1, required=True)

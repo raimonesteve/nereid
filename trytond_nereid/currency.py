@@ -3,7 +3,7 @@
 from trytond.model import ModelView, ModelSQL, fields
 from nereid import request
 
-__all__ = ['Currency', 'Language']
+__all__ = ['Currency']
 
 
 class Currency(ModelSQL, ModelView):
@@ -34,11 +34,3 @@ class Currency(ModelSQL, ModelView):
             'compute': cls.compute,
             'convert': cls.convert
         }
-
-
-class Language(ModelSQL, ModelView):
-    __name__ = "ir.lang"
-
-    default_currency = fields.Many2One(
-        'currency.currency', 'Default Currency'
-    )

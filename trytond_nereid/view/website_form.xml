@@ -19,6 +19,9 @@ this repository contains the full copyright notices and license terms. -->
     <label name="timezone"/>
     <field name="timezone"/>
     <notebook colspan="4">
+      <page id="languages" string="Languagues">
+        <field name="languages"/>
+      </page>
       <page id="Countries" string="Countries">
         <field name="countries"/>
       </page>
