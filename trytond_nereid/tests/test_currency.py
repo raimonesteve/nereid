@@ -19,6 +19,7 @@ class TestCurrency(NereidTestCase):
         trytond.tests.test_tryton.install_module('nereid')
 
         self.nereid_website_obj = POOL.get('nereid.website')
+        self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
         self.nereid_permission_obj = POOL.get('nereid.permission')
         self.nereid_user_obj = POOL.get('nereid.user')
         self.url_map_obj = POOL.get('nereid.url_map')
@@ -82,12 +83,19 @@ class TestCurrency(NereidTestCase):
         self.website_currencies = [c1, c2]
         url_map, = self.url_map_obj.search([], limit=1)
         self.en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        currency, = self.currency_obj.search([('code', '=', 'USD')])
+        locale, = self.nereid_website_locale_obj.create([{
+            'code': 'en-us',
+            'language': self.en_us,
+            'currency': currency,
+        }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
             'url_map': url_map,
             'company': self.company,
             'application_user': USER,
-            'default_language': self.en_us,
+            'default_locale': locale,
+            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user.id,
             'currencies': [('set', self.website_currencies)],
         }])
@@ -111,12 +119,12 @@ class TestCurrency(NereidTestCase):
             app = self.get_app()
 
             with app.test_client() as c:
-                rv = c.get('/en_US/')
+                rv = c.get('/en_us/')
                 self.assertEqual(rv.status_code, 200)
 
             self.assertEqual(int(rv.data), self.company.currency.id)
 
-            with app.test_request_context('/en_US/'):
+            with app.test_request_context('/en_us/'):
                 self.assertEqual(
                     self.currency_obj.convert(Decimal('100')), Decimal('100')
                 )
@@ -134,12 +142,12 @@ class TestCurrency(NereidTestCase):
                 [self.en_us], {'default_currency': self.lang_currency}
             )
             with app.test_client() as c:
-                rv = c.get('/en_US/')
+                rv = c.get('/en_us/')
                 self.assertEqual(rv.status_code, 200)
 
             self.assertEqual(int(rv.data), int(self.lang_currency))
 
-            with app.test_request_context('/en_US/'):
+            with app.test_request_context('/en_us/'):
                 self.assertEqual(
                     self.currency_obj.convert(Decimal('100')), Decimal('3000')
                 )

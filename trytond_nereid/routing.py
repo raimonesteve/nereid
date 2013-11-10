@@ -12,6 +12,7 @@ from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from trytond.pool import Pool
+from trytond import backend
 
 from .i18n import _
 
@@ -132,15 +133,15 @@ class WebSite(ModelSQL, ModelView):
         'nereid.website-currency.currency',
         'website', 'currency', 'Currencies Available')
 
-    #: Default language
-    default_language = fields.Many2One(
-        'ir.lang', 'Default Language',
+    #: Default locale
+    default_locale = fields.Many2One(
+        'nereid.website.locale', 'Default Locale',
         required=True
     )
 
-    #: Allowed currencies in the website
-    languages = fields.Many2Many(
-        'nereid.website-nereid.webiste.locale',
+    #: Allowed locales in the website
+    locales = fields.Many2Many(
+        'nereid.website-nereid.website.locale',
         'website', 'locale', 'Languages Available')
 
     #: The res.user with which the nereid application will be loaded
@@ -362,6 +363,14 @@ class WebSiteLocale(ModelSQL, ModelView):
     currency = fields.Many2One('currency.currency', 'Currency',
         ondelete='CASCADE', required=True)
 
+    @classmethod
+    def __setup__(cls):
+        super(WebSiteLocale, cls).__setup__()
+        cls._sql_constraints += [
+            ('unique_code', 'UNIQUE(code)',
+                'Code must be unique'),
+        ]
+
 
 class URLRule(ModelSQL, ModelView):
     """
@@ -509,15 +518,15 @@ class WebsiteCurrency(ModelSQL):
 
     website = fields.Many2One(
         'nereid.website', 'Website',
-        ondelete='CASCADE', select=1, required=True)
+        ondelete='CASCADE', select=True, required=True)
     currency = fields.Many2One(
         'currency.currency', 'Currency',
-        ondelete='CASCADE', select=1, required=True)
+        ondelete='CASCADE', select=True, required=True)
 
 
 class WebsiteWebsiteLocale(ModelSQL):
     "Languages to be made available on website"
-    __name__ = 'nereid.website-nereid.webiste.locale'
+    __name__ = 'nereid.website-nereid.website.locale'
     _table = 'website_locale_rel'
 
     website = fields.Many2One(

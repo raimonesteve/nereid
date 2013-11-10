@@ -458,10 +458,10 @@ class Nereid(Flask):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        language = req.view_args.pop(
-            'language', req.nereid_website.default_language.code
+        locale = req.view_args.pop(
+            'locale', req.nereid_website.default_locale.code
         )
-        with Transaction().set_context(language=language):
+        with Transaction().set_context(locale=locale):
             # otherwise dispatch to the handler for that endpoint
             meth = self.view_functions[rule.endpoint]
             if not hasattr(meth, 'im_self') or meth.im_self:
@@ -489,7 +489,7 @@ class Nereid(Flask):
 
         rv.filters.update(**NEREID_TEMPLATE_FILTERS)
 
-        # add the language sensitive url_for of nereid
+        # add the locale sensitive url_for of nereid
         rv.globals.update(url_for=url_for)
 
         if self.cache:

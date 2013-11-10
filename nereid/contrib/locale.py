@@ -42,7 +42,7 @@ def get_locale():
     if locale is None:
         babel = ctx.app.extensions['babel']
         if babel.locale_selector_func is None:
-            rv = ctx.request.nereid_language.code
+            rv = ctx.request.nereid_locale.code
         else:
             rv = babel.locale_selector_func()
 

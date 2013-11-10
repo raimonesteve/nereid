@@ -47,23 +47,20 @@ class Request(RequestBase):
     def nereid_currency(self):
         """
         Return a browse record for the currency.
-        Currency is looked up first in the language. If it does not exist
-        in the language then the currency of the company is returned
+        Currency is looked up first in the locale.
         """
-        if self.nereid_language.default_currency:
-            return self.nereid_language.default_currency
-        return self.nereid_website.company.currency
+        return self.nereid_locale.default_currency
 
     @cached_property
-    def nereid_language(self):
-        """Return a browse record for the language."""
+    def nereid_locale(self):
+        """Return a browse record for the locale."""
         from trytond.transaction import Transaction
-        IRLanguage = current_app.pool.get('ir.lang')
-        languages = IRLanguage.search([('code', '=', Transaction().language)])
-        if not languages:
+        WebsiteLocale = current_app.pool.get('nereid.website.locale')
+        locales = WebsiteLocale.search([('code', '=', Transaction().locale)])
+        if not locales:
             flash("We are sorry we don't speak your language yet!")
-            return self.nereid_website.default_language
-        return languages[0]
+            return self.nereid_website.default_locale
+        return locales[0]
 
     @cached_property
     def is_guest_user(self):
