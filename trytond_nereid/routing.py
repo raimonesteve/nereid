@@ -16,7 +16,7 @@ from trytond import backend
 
 from .i18n import _
 
-__all__ = ['URLMap', 'WebSite', 'WebSiteLocale', 'URLRule', 'URLRuleDefaults',
+__all__ = ['URLMap', 'WebSiteLocale', 'WebSite', 'URLRule', 'URLRuleDefaults',
            'WebsiteCountry', 'WebsiteCurrency', 'WebsiteWebsiteLocale']
 
 
@@ -87,6 +87,25 @@ class LoginForm(Form):
     "Default Login Form"
     email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
     password = PasswordField(_('Password'), [validators.Required()])
+
+
+class WebSiteLocale(ModelSQL, ModelView):
+    'Web Site Locale'
+    __name__ = "nereid.website.locale"
+    _rec_name = 'code'
+    code = fields.Char('Code', required=True)
+    language = fields.Many2One('ir.lang', 'Default Language',
+        required=True)
+    currency = fields.Many2One('currency.currency', 'Currency',
+        ondelete='CASCADE', required=True)
+
+    @classmethod
+    def __setup__(cls):
+        super(WebSiteLocale, cls).__setup__()
+        cls._sql_constraints += [
+            ('unique_code', 'UNIQUE(code)',
+                'Code must be unique'),
+        ]
 
 
 class WebSite(ModelSQL, ModelView):
@@ -351,25 +370,6 @@ class WebSite(ModelSQL, ModelView):
         Returns a JSON of the user_status
         """
         return jsonify(status=cls._user_status())
-
-
-class WebSiteLocale(ModelSQL, ModelView):
-    'Web Site Locale'
-    __name__ = "nereid.website.locale"
-    _rec_name = 'code'
-    code = fields.Char('Code', required=True)
-    language = fields.Many2One('ir.lang', 'Default Language',
-        required=True)
-    currency = fields.Many2One('currency.currency', 'Currency',
-        ondelete='CASCADE', required=True)
-
-    @classmethod
-    def __setup__(cls):
-        super(WebSiteLocale, cls).__setup__()
-        cls._sql_constraints += [
-            ('unique_code', 'UNIQUE(code)',
-                'Code must be unique'),
-        ]
 
 
 class URLRule(ModelSQL, ModelView):
