@@ -35,6 +35,10 @@ from .i18n import _, get_translations
 __all__ = ['Address', 'Party', 'NereidUser',
            'ContactMechanism', 'Permission', 'UserPermission']
 
+STATES = {
+    'readonly': ~Eval('active'),
+    }
+
 
 class RegistrationForm(Form):
     "Simple Registration form"
@@ -122,6 +126,8 @@ class Address:
 
     registration_form = RegistrationForm
 
+    contact_mechanism = fields.One2Many('party.contact_mechanism', 'address',
+        'Contact Mechanism', readonly=True)
     phone = fields.Function(fields.Char('Phone'), 'get_address_mechanism')
     email = fields.Function(fields.Char('E-Mail'), 'get_address_mechanism')
 
@@ -165,7 +171,7 @@ class Address:
                 table.column_rename(column, '%s_deprecated' % column)
 
     def get_address_mechanism(self, name):
-        for mechanism in self.party.contact_mechanisms:
+        for mechanism in self.contact_mechanism:
             if mechanism.type == name:
                 return mechanism.value
         return ''
@@ -192,10 +198,11 @@ class Address:
         if address not in (a.id for a in request.nereid_user.party.addresses):
             address = None
         if request.method == 'POST' and form.validate():
-            mechanisms = []
+            mechanisms_create = []
             party = request.nereid_user.party
             if address is not None:
-                cls.write([cls(address)], {
+                address = cls(address)
+                cls.write([address], {
                     'name': form.name.data,
                     'street': form.street.data,
                     'streetbis': form.streetbis.data,
@@ -205,7 +212,7 @@ class Address:
                     'subdivision': form.subdivision.data,
                 })
             else:
-                cls.create([{
+                address, = cls.create([{
                     'name': form.name.data,
                     'street': form.street.data,
                     'streetbis': form.streetbis.data,
@@ -216,32 +223,39 @@ class Address:
                     'party': party.id,
                 }])
             if form.email.data:
-                if not ContactMechanism.search(
-                        [
-                            ('party', '=', party.id),
-                            ('type', '=', 'email'),
-                            ('value', '=', form.email.data),
-                        ]):
-                    mechanisms.append({
+                contact_mechanisms = ContactMechanism.search([
+                        ('address', '=', address.id),
+                        ('type', '=', 'email'),
+                        ], limit=1)
+                if contact_mechanisms:
+                    ContactMechanism.write(contact_mechanisms, {
+                        'value': form.email.data,
+                        })
+                else:
+                    mechanisms_create.append({
                         'party': request.nereid_user.party.id,
+                        'address': address.id,
                         'type': 'email',
                         'value': form.email.data,
                     })
             if form.phone.data:
-                if not ContactMechanism.search(
-                        [
-                            ('party', '=', party.id),
-                            ('type', '=', 'phone'),
-                            ('value', '=', form.phone.data),
-                        ]):
-                    mechanisms.append({
+                contact_mechanisms = ContactMechanism.search([
+                        ('address', '=', address.id),
+                        ('type', '=', 'phone'),
+                        ], limit=1)
+                if contact_mechanisms:
+                    ContactMechanism.write(contact_mechanisms, {
+                        'value': form.phone.data,
+                        })
+                else:
+                    mechanisms_create.append({
                         'party': request.nereid_user.party.id,
+                        'address': address.id,
                         'type': 'phone',
                         'value': form.phone.data,
                     })
-
-            if len(mechanisms) > 0:
-                ContactMechanism.create(mechanisms)
+            if mechanisms_create:
+                ContactMechanism.create(mechanisms_create)
             return redirect(url_for('party.address.view_address'))
         elif request.method == 'GET' and address:
             # Its an edit of existing address, prefill data
@@ -843,6 +857,10 @@ class ContactMechanism(ModelSQL, ModelView):
     Allow modification of contact mechanisms
     """
     __name__ = "party.contact_mechanism"
+    address = fields.Many2One('party.address', 'Address',
+        domain=[('party', '=', Eval('party'))],
+        ondelete='CASCADE', states=STATES, select=True,
+        depends=['active', 'party'])
 
     @classmethod
     def get_form(cls):
