@@ -203,6 +203,8 @@ class Address:
                     'city': form.city.data,
                     'country': form.country.data,
                     'subdivision': form.subdivision.data,
+                    'email': form.email.data,
+                    'phone': form.phone.data,
                 })
             else:
                 cls.create([{
@@ -242,6 +244,10 @@ class Address:
 
             if len(mechanisms) > 0:
                 ContactMechanism.create(mechanisms)
+                    'party': request.nereid_user.party.id,
+                    'email': form.email.data,
+                    'phone': form.phone.data,
+                }])
             return redirect(url_for('party.address.view_address'))
         elif request.method == 'GET' and address:
             # Its an edit of existing address, prefill data
